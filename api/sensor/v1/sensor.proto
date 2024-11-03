@@ -1,0 +1,108 @@
+syntax = "proto3";
+package sensor.v1;
+import "google/api/annotations.proto";
+// We can tell the generator the field behaviors so that some fields would not appear
+// when regarded as input / output only fields
+import "google/api/field_behavior.proto";
+// Customize the method signature by importing the proto file
+import "google/api/client.proto";
+// We can import this protobuf file to use the timestamp data type in our code
+import "google/protobuf/timestamp.proto";
+// Import the file to return an empty message
+import "google/protobuf/empty.proto";
+// To generate the final product OpenAPI specification file, we shall import the annotations to tell the generator
+// to fill the corresponding fields so as to tell the developer how to use the APIs in a proper way.
+import "openapi/v3/annotations.proto";
+// To employ the validator like what the Spring framework does, we shall import the validate file provided by Envoy
+import "validate/validate.proto";
+// Any other protocol buffers definition files should also be imported explicitly
+import "sensor/api/sensor/v1/error_reason.proto";
+option go_package = "sensor/api/sensor/v1;v1";
+option java_multiple_files = true; // Separate .java files will be generated for each of the Java classes/enums/etc.
+option java_package = "sensor.v1"; // The package which the generated code will be placed in
+option objc_class_prefix = "APISensorV1"; // Objective-C class prefix
+
+option (openapi.v3.document) = {
+  info: {
+    title: "Sensor data Processing Service"
+    description: "A basic  service process on the sensor data"
+    version: "1.0.0"
+  }
+};
+service SensorService {
+
+  rpc InterpolateData (InterpolationRequest) returns (InterpolationResponse){
+    option (google.api.http) = {
+      post: "/InterpolateData"
+      // HTTP method POST and PUT should contain a body
+      body: "*"
+    };
+    option (openapi.v3.operation) = {
+      summary: "Interpolate data"
+      description: "interpolate data to the terminal"
+    };
+  }
+  // Set threshold for triggering alarm
+  rpc SetThreshold(SetThresholdRequest) returns (SetThresholdResponse) {
+    option (google.api.http) = {
+      post: "/threshold/{id}"
+
+      // HTTP method POST and PUT should contain a body
+      body: "*"
+    };
+    option (google.api.method_signature) = "id";
+    option (openapi.v3.operation) = {
+      summary: "set the threshold"
+      description: "set a new threshold to the sensor"
+    };
+  }
+
+  // Check if alarm is triggered
+  rpc CheckAlarm(AlarmRequest) returns (AlarmResponse) { option (google.api.http) = {
+    get: "/sensor/{id}"
+  };
+    option (google.api.method_signature) = "id";
+    option (openapi.v3.operation) = {
+      summary: "check the status by id"
+      description:
+          "check the status in a set time"
+    };}
+}
+message SetThresholdRequest {
+  string sensor_id = 1;
+  double threshold = 2;
+}
+
+message SetThresholdResponse {
+  bool success = 1;
+}
+message Sensor {
+  string id = 1;              // sensor id
+  int64 type_id = 2;          // sensor type
+  string desc = 3;            // sensor description
+  int64 rule_id = 4;          // rule id applied by the sensor
+  string status = 5;          // sensor status
+  string last_update = 6;     // last update time
+}
+
+// request to check weather have alarm
+message AlarmRequest {
+  string sensor_id = 1;       // request sensorID of check//
+  }
+
+// response the result
+message AlarmResponse {
+  bool alarm_triggered = 1;   // is alarmed
+  string message = 2;         // alarm information
+}
+
+// Request Perform data interpolation
+message InterpolationRequest {
+  string terminal_id = 1;     // 请求插值的终端 ID
+}
+
+// Response interpolation execution results
+message InterpolationResponse {
+  bool interpolated = 1;      // Whether the interpolation was performed successfully
+  string message = 2;         // Interpolated message content
+}
